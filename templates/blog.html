@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Blog Posts</h1>
+    <ul>
+        {% for task in tasks %}
+        <div>
+        <a href = "/blog?id={{task.id}}"><h1>{{task.title}}</h1></a> 
+        </div>
+        {{task.body}}
+        {% endfor %}
+    </ul>
+
+{% endblock %}

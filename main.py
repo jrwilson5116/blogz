@@ -22,14 +22,15 @@ class Blog(db.Model):
         self.owner = owner
 
 class User(db.Model):
-    id = db.Column(db.Integer, primay_key=True)
+    id = db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String(20))
-    password = db.Columb(db.String(20))
+    password = db.Column(db.String(20))
     blogs = db.relationship('Blog', backref='owner')
 
     def __init__(self,username,password):
         self.username = username
-        self.body = body
+        self.password = password
+     
 
 
 @app.route('/')
@@ -53,22 +54,22 @@ def add_post():
     if request.method == 'POST':
         blog_name = request.form['title']
         blog_body = request.form['body']
-        new_blog = Blog(blog_name,blog_body)
+        new_blog = Blog(blog_name,blog_body,owner)
         db.session.add(new_blog)
         db.session.commit()
         return redirect(url_for('blog'))
     return render_template('newpost.html')
 
 @app.route('/signup',methods=['POST','GET'])
-def signup:
+def signup():
     return render_template('signup.html')
 
 @app.route('/login', methods=['POST','GET'])
-def login:
+def login():
     return render_template('login.html')
 
 @app.route('/logout')
-def logout:
+def logout():
     return redirect(url_for('blog'))
 
 

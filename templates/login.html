@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Log in</h1>
+    <form method="post">
+        <table>
+            <tr>
+                <td><label for="username">Username</label></td>
+                <td>
+                    <input name="username" type="text" value="">
+                    <span class="error">{0}</span>
+                </td>
+            </tr>
+            <tr>
+                <td><label for="password">Password</label></td>
+                <td>
+                    <input name="password" type="password">
+                    <span class="error">{1}</span>
+                </td>
+            </tr>
+            <p>No account? No problem, <a href = "signup">Create One</a></p>
+        </table>
+        <input type="submit">
+    </form>
+{% endblock %}

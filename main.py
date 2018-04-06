@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, url_for
+from flask import Flask, request, redirect, render_template, url_for,session
 from flask_sqlalchemy import SQLAlchemy 
 from input_checks import valid_length, match
 
@@ -7,14 +7,16 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:blogz@localhost:8889/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'shhh123'
 db = SQLAlchemy(app)
+
 
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(30))
     body = db.Column(db.Text)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    owner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, name, body, owner):
         self.title = name
@@ -25,7 +27,7 @@ class User(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     username = db.Column(db.String(20))
     password = db.Column(db.String(20))
-    blogs = db.relationship('Blog', backref='owner')
+    blogs = db.relationship('Blog', backref='owner_id')
 
     def __init__(self,username,password):
         self.username = username
@@ -91,22 +93,36 @@ def signup():
             new_user = User(user_name,password)
             db.session.add(new_user)
             db.session.commit()
+            session['username'] = user_name
             return redirect(url_for('add_post'))
 
     return render_template('signup.html').format(name_error,password_error,match_error)
 
 @app.route('/login', methods=['POST','GET'])
 def login():
-    #TODO process login attempt
-    # if username is real and password matches store username in session and redirect to newpost page
-    # if username does not exist, redirect to login with bad username message
-    # if username exists but password does not match
+    name_err=''
+    pass_err=''
 
-    return render_template('login.html')
+    if request.method == 'POST':
+        user_name = request.form['username']
+        password = request.form['password']
+
+        if User.query.filter_by(username=user_name).first() == None:
+            name_err='Invalid username'
+        else:
+            current_user = User.query.filter_by(username=user_name).first()
+            
+        if current_user and current_user.password == password:
+            session['username'] = user_name
+            return redirect(url_for('add_post'))
+        elif current_user and current_user.password != password:
+            pass_err = 'Invalid password'
+
+    return render_template('login.html').format(name_err,pass_err)
 
 @app.route('/logout')
 def logout():
-    #TODO remove username from session
+    #TODO remove username from 
     return redirect(url_for('blog'))
 
 

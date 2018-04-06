@@ -13,7 +13,7 @@ db = SQLAlchemy(app)
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(30))
-    body = db.Column(db.String(2000))
+    body = db.Column(db.Text)
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __init__(self, name, body, owner):
@@ -36,7 +36,7 @@ class User(db.Model):
 @app.route('/')
 def index():
     #TODO add home page
-    return redirect(url_for('blog'))
+    return render_template('index.html')
 
 
 @app.route('/blog', methods=['GET'])
@@ -68,19 +68,27 @@ def signup():
     match_error = ''
 
     if request.method == 'POST':
-        username = request.form['username']
+        user_name = request.form['username']
         password = request.form['password']
         verify_password = request.form['verify']
 
-        if not valid_length(username):
+        valid = True 
+
+        if not valid_length(user_name):
             name_error = 'Invalid username'
+            valid = False
+        elif not User.query.filter_by(username=user_name).first() == None:
+            name_error = 'Username is already taken'
+            valid = False
         if not valid_length(password):
             password_error = 'Invalid password'
+            valid = False 
         if not match(password,verify_password):
             match_error = 'Passwords do not match'
+            valid = False 
         
-        if valid_length(username) and valid_length(password) and match:
-            new_user = User(username,password)
+        if valid == True:
+            new_user = User(user_name,password)
             db.session.add(new_user)
             db.session.commit()
             return redirect(url_for('add_post'))

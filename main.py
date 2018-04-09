@@ -18,10 +18,10 @@ class Blog(db.Model):
     body = db.Column(db.Text)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, name, body, owner):
+    def __init__(self, name, body):
         self.title = name
         self.body =body
-        self.owner = owner
+        # self.owner = owner
 
 class User(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -38,18 +38,27 @@ class User(db.Model):
 @app.route('/')
 def index():
     #TODO add home page
-    return render_template('index.html')
+    users = User.query.order_by(User.id.desc()).all()
+    return render_template('index.html', users = users)
+
+
+@app.before_request
+def require_login():
+    allowed_routes = ['login','signup','blog','index']
+    if request.endpoint not in allowed_routes and 'username' not in session:
+        return redirect(url_for('login'))
 
 
 @app.route('/blog', methods=['GET'])
 def blog():
     blog_post = request.args.get('id')
-
+    
     if blog_post is None:
-        tasks = Blog.query.all()
+        blogs = Blog.query.all()
     else:
-        tasks = Blog.query.filter_by(id = blog_post)
-    return render_template('blog.html',title="Blog", tasks=tasks)
+        blogs = Blog.query.filter_by(id = blog_post)
+
+    return render_template('blog.html',title="Blog", blogs=blogs)
 
 
 @app.route('/newpost',methods=['POST','GET'])
@@ -57,7 +66,7 @@ def add_post():
     if request.method == 'POST':
         blog_name = request.form['title']
         blog_body = request.form['body']
-        new_blog = Blog(blog_name,blog_body,owner)
+        new_blog = Blog(blog_name,blog_body)
         db.session.add(new_blog)
         db.session.commit()
         return redirect(url_for('blog'))
@@ -122,10 +131,10 @@ def login():
 
 @app.route('/logout')
 def logout():
-    #TODO remove username from 
-    return redirect(url_for('blog'))
-
-
+    if 'username' in session:
+        del session['username']
+    return redirect('/')
+    
 
 if __name__=='__main__':
     app.run()

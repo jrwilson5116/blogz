@@ -3,11 +3,11 @@
 {% block content %}
     <h1>Blog Posts</h1>
     <ul>
-        {% for task in tasks %}
+        {% for blog in blogs %}
         <div>
-        <a href = "/blog?id={{task.id}}"><h1>{{task.title}}</h1></a> 
+        <a href = "/blog?id={{blog.id}}"><h1>{{blog.title}}</h1></a> 
         </div>
-        {{task.body}}
+        {{blog.body}}
         {% endfor %}
     </ul>
 

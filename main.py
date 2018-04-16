@@ -105,7 +105,7 @@ def signup():
         password_error = valid_length(password)
         match_error = match(password,verify_password)
         
-        if not name_error and not password_error and not match_error :
+        if not name_error and not password_error and not match_error:
             new_user = User(user_name,password)
             db.session.add(new_user)
             db.session.commit()

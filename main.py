@@ -45,7 +45,7 @@ def index():
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login','signup','blog','index']
+    allowed_routes = ['login','signup','blog','index','logout']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect(url_for('login'))
 
@@ -66,7 +66,7 @@ def blog():
         author = User.query.filter_by(username = session['username']).first()
         blogs = Blog.query.filter_by(owner=author.id)
         return render_template('singleUser.html',title ='blog',blogs=blogs)
-        
+
     blogs = Blog.query.all()
 
     return render_template('blog.html',title="Blog", blogs=blogs)
@@ -85,7 +85,7 @@ def add_post():
         db.session.add(new_blog)
         db.session.commit()
 
-        return redirect(url_for('blog'))
+        return redirect(url_for('blog',id=new_blog.id))
 
     return render_template('newpost.html')
 
@@ -101,22 +101,11 @@ def signup():
         password = request.form['password']
         verify_password = request.form['verify']
 
-        valid = True 
-
-        if not valid_length(user_name):
-            name_error = 'Invalid username'
-            valid = False
-        elif not User.query.filter_by(username=user_name).first() == None:
-            name_error = 'Username is already taken'
-            valid = False
-        if not valid_length(password):
-            password_error = 'Invalid password'
-            valid = False 
-        if not match(password,verify_password):
-            match_error = 'Passwords do not match'
-            valid = False 
+        name_error = valid_length(user_name)
+        password_error = valid_length(password)
+        match_error = match(password,verify_password)
         
-        if valid == True:
+        if not name_error and not password_error and not match_error :
             new_user = User(user_name,password)
             db.session.add(new_user)
             db.session.commit()

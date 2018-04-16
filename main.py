@@ -18,10 +18,12 @@ class Blog(db.Model):
     body = db.Column(db.Text)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __init__(self, name, body):
+    def __init__(self, name, body,owner):
         self.title = name
         self.body =body
-        # self.owner = owner
+        self.owner = owner
+  
+        
 
 class User(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -37,7 +39,6 @@ class User(db.Model):
 
 @app.route('/')
 def index():
-    #TODO add home page
     users = User.query.order_by(User.id.desc()).all()
     return render_template('index.html', users = users)
 
@@ -51,12 +52,22 @@ def require_login():
 
 @app.route('/blog', methods=['GET'])
 def blog():
-    blog_post = request.args.get('id')
+    blog_ID = request.args.get('id')
+    username_get = request.args.get('username')
     
-    if blog_post is None:
-        blogs = Blog.query.all()
-    else:
-        blogs = Blog.query.filter_by(id = blog_post)
+    if blog_ID is not None: 
+        blog = Blog.query.filter_by(id = blog_ID).first()
+        return render_template('singlePost.html',title='Blog',blog=blog)
+    elif username_get is not None:
+        author = User.query.filter_by(username = username_get).first()
+        blogs = Blog.query.filter_by(owner=author.id)
+        return render_template('singleUser.html',title = 'blog', blogs=blogs)
+    elif 'username' in session:
+        author = User.query.filter_by(username = session['username']).first()
+        blogs = Blog.query.filter_by(owner=author.id)
+        return render_template('singleUser.html',title ='blog',blogs=blogs)
+        
+    blogs = Blog.query.all()
 
     return render_template('blog.html',title="Blog", blogs=blogs)
 
@@ -66,11 +77,18 @@ def add_post():
     if request.method == 'POST':
         blog_name = request.form['title']
         blog_body = request.form['body']
-        new_blog = Blog(blog_name,blog_body)
+
+        currentUser = User.query.filter_by(username = session['username']).first()
+
+        new_blog = Blog(blog_name,blog_body,currentUser.id)
+
         db.session.add(new_blog)
         db.session.commit()
+
         return redirect(url_for('blog'))
+
     return render_template('newpost.html')
+
 
 @app.route('/signup',methods=['POST','GET'])
 def signup():
@@ -109,6 +127,7 @@ def signup():
 
 @app.route('/login', methods=['POST','GET'])
 def login():
+    #TODO add error messages tailored to error 
     name_err=''
     pass_err=''
 

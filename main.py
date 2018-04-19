@@ -1,6 +1,7 @@
 from flask import Flask, request, redirect, render_template, url_for,session
 from flask_sqlalchemy import SQLAlchemy 
 from input_checks import valid_length, match
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -17,13 +18,16 @@ class Blog(db.Model):
     title = db.Column(db.String(30))
     body = db.Column(db.Text)
     owner = db.Column(db.Integer, db.ForeignKey('user.id'))
+    pub_date = db.Column(db.DateTime)
+    author_username = db.Column(db.String(20))
 
-    def __init__(self, name, body,owner):
+    def __init__(self, name, body,owner, pub_date,author_username):
         self.title = name
         self.body =body
         self.owner = owner
-  
-        
+        self.pub_date = pub_date
+        self.author_username = author_username
+       
 
 class User(db.Model):
     id = db.Column(db.Integer,primary_key=True)
@@ -54,10 +58,12 @@ def require_login():
 def blog():
     blog_ID = request.args.get('id')
     username_get = request.args.get('username')
-    
+    blogs = Blog.query.all()
+   
     if blog_ID is not None: 
         blog = Blog.query.filter_by(id = blog_ID).first()
-        return render_template('singlePost.html',title='Blog',blog=blog)
+        author = User.query.filter_by(id = blog.owner)
+        return render_template('singlePost.html',title='Blog',blog=blog,owner=author)
     elif username_get is not None:
         author = User.query.filter_by(username = username_get).first()
         blogs = Blog.query.filter_by(owner=author.id)
@@ -67,8 +73,6 @@ def blog():
         blogs = Blog.query.filter_by(owner=author.id)
         return render_template('singleUser.html',title ='blog',blogs=blogs)
 
-    blogs = Blog.query.all()
-
     return render_template('blog.html',title="Blog", blogs=blogs)
 
 
@@ -77,10 +81,9 @@ def add_post():
     if request.method == 'POST':
         blog_name = request.form['title']
         blog_body = request.form['body']
-
         currentUser = User.query.filter_by(username = session['username']).first()
-
-        new_blog = Blog(blog_name,blog_body,currentUser.id)
+        date = datetime.utcnow()
+        new_blog = Blog(blog_name,blog_body,currentUser.id,date,currentUser.username)
 
         db.session.add(new_blog)
         db.session.commit()
@@ -116,7 +119,6 @@ def signup():
 
 @app.route('/login', methods=['POST','GET'])
 def login():
-    #TODO add error messages tailored to error 
     name_err=''
     pass_err=''
 

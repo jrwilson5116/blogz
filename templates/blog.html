@@ -1,4 +1,3 @@
-{% extends "base.html" %}
 
 {% block content %}
     <h1>Blog</h1>
@@ -9,7 +8,10 @@
         </div>
         {{blog.body}}
         <br><br>
- 
+        <span class=auth>written by</span>
+        <a href = "/blog?username={{blog.author_username}}">{{blog.author_username}}</a>
+        <br><br>
+        {{blog.pub_date}}
         {% endfor %}
     </ul>
 {% endblock %}
